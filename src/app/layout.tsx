@@ -1,9 +1,8 @@
-import { Read the file content first. Since this is a new file, I'll write the root layout with authentication check and theme provider.
- } from "react";
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthCheck } from "@/components/auth-check";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Task Manager",
@@ -25,6 +24,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthCheck>{children}</AuthCheck>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
