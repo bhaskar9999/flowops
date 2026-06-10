@@ -5,16 +5,18 @@ import { useAuthStore } from "@/store/auth";
 import { useRouter, usePathname } from "next/navigation";
 
 export function AuthCheck({ children }: { children: React.ReactNode }) {
-  const { user, loading, checkAuth } = useAuthStore();
+  const { user, loading, initialized, initialize } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    if (!initialized) {
+      initialize();
+    }
+  }, [initialized, initialize]);
 
   useEffect(() => {
-    if (!loading) {
+    if (initialized) {
       const isAuthPage = pathname === "/login" || pathname === "/register" || pathname === "/forgot-password";
 
       if (!user && !isAuthPage) {
@@ -23,9 +25,9 @@ export function AuthCheck({ children }: { children: React.ReactNode }) {
         router.push("/");
       }
     }
-  }, [user, loading, pathname, router]);
+  }, [user, initialized, pathname, router]);
 
-  if (loading) {
+  if (loading || !initialized) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="text-center">

@@ -9,17 +9,19 @@ export type User = {
 type AuthStore = {
   user: User | null;
   loading: boolean;
+  initialized: boolean;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  checkAuth: () => Promise<void>;
+  initialize: () => Promise<void>;
 };
 
 export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   loading: true,
+  initialized: false,
 
   setUser: (user) => set({ user }),
   setLoading: (loading) => set({ loading }),
@@ -33,14 +35,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
     if (error) throw error;
 
     if (data.user) {
-      const { error: insertError } = await supabase.from("users").insert({
+      // The user record will be created by a database trigger or we can create it here
+      // For now, we'll try to insert but ignore errors if it already exists
+      await supabase.from("users").upsert({
         id: data.user.id,
-        email: data.user.email,
-      });
+        email: data.user.email || email,
+      }, { onConflict: 'id' });
 
-      if (insertError) throw insertError;
-
-      set({ user: { id: data.user.id, email: data.user.email || "" } });
+      set({ user: { id: data.user.id, email: data.user.email || email } });
     }
   },
 
@@ -63,11 +65,27 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ user: null });
   },
 
-  checkAuth: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session?.user) {
-      set({ user: { id: data.session.user.id, email: data.session.user.email || "" } });
+  initialize: async () => {
+    // Get initial session
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      set({
+        user: { id: session.user.id, email: session.user.email || "" },
+        loading: false,
+        initialized: true,
+      });
+    } else {
+      set({ loading: false, initialized: true });
     }
-    set({ loading: false });
+
+    // Listen for auth state changes
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        set({ user: { id: session.user.id, email: session.user.email || "" } });
+      } else {
+        set({ user: null });
+      }
+    });
   },
 }));

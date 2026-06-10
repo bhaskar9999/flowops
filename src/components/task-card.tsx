@@ -37,12 +37,6 @@ const priorityColors: Record<string, string> = {
   high: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
-const statusLabels: Record<string, string> = {
-  todo: "To Do",
-  in_progress: "In Progress",
-  done: "Done",
-};
-
 export function TaskCard({ task }: { task: Task }) {
   const { updateTask, deleteTask } = useTasksStore();
   const [editing, setEditing] = useState(false);
@@ -91,7 +85,7 @@ export function TaskCard({ task }: { task: Task }) {
 
   return (
     <>
-      <Card className="p-4 flex items-start gap-4 group hover:shadow-md transition-shadow">
+      <Card className="p-4 flex items-start gap-4 group hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing">
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-medium text-slate-900 dark:text-slate-100 truncate">
